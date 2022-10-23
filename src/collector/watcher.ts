@@ -4,7 +4,7 @@ import RPCWatcher, { RpcResponse } from 'lib/RPCWatcher'
 import config from 'config'
 import { collectBlock } from './block'
 
-const SOCKET_URL = `${config.RPC_URI.replace('http', 'ws')}/websocket`
+const SOCKET_URL = `${config.RPC_URI.replace('http', 'ws')}/websocket?key=cf65fc4a413a47639f623f80e67adb1b`
 const NEW_BLOCK_Q = `tm.event='NewBlock'`
 
 async function processNewBlock(data: RpcResponse) {

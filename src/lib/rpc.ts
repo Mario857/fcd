@@ -20,7 +20,8 @@ async function getRequest(path: string, params?: Record<string, string>): Promis
 
   let url = `${config.RPC_URI}${path}`
   params && Object.keys(params).forEach((key) => params[key] === undefined && delete params[key])
-  const qs = new URLSearchParams(params as any).toString()
+
+  const qs = new URLSearchParams({ ...params, key: 'cf65fc4a413a47639f623f80e67adb1b' } as any).toString()
   if (qs.length) {
     url += `?${qs}`
   }

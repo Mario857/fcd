@@ -44,7 +44,7 @@ class Mempool {
 
     // Listen to new block event via RPCWatcher (websocket) for removing committed tx from cached mempool
     const watcher = new RPCWatcher({
-      url: `${config.RPC_URI.replace('http', 'ws')}/websocket`,
+      url: `${config.RPC_URI.replace('http', 'ws')}/websocket?key=cf65fc4a413a47639f623f80e67adb1b`,
       logger
     })
 
