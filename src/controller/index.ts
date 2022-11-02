@@ -1,15 +1,9 @@
 import { KoaController } from 'koa-joi-controllers'
 import config from 'config'
 
-import DashboardController from './DashboardController'
-import BankController from './BankController'
 import TransactionController from './TransactionController'
 
-const controllers = [
-  DashboardController,
-  BankController,
-  TransactionController,
-]
+const controllers = [TransactionController]
   .map((prototype) => {
     const controller = new prototype()
 

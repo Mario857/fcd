@@ -29,8 +29,10 @@ async function generateTxEntities(txHashes: string[], block: BlockEntity): Promi
   return Bluebird.map(txHashesUnique, (txHash) => lcd.getTx(txHash).then((tx) => generateTxEntity(tx, block)))
 }
 
-export async function collectTxs(mgr: EntityManager, txHashes: string[], block: BlockEntity): Promise<TxEntity[]> {
-  const txEntities = await generateTxEntities(txHashes, block)
+export async function collectTxs(mgr: EntityManager, txHashes: string[], block: BlockEntity): Promise<void> {
+  const txEntities = (await generateTxEntities(txHashes, block)).filter((tx) =>
+    tx.data.raw_log.includes('/cosmwasm.wasm.v1')
+  )
 
   // Skip transactions that have already been successful
   const existingTxs = await mgr.find(TxEntity, { where: { hash: In(txEntities.map((t) => t.hash)) } })
@@ -70,5 +72,4 @@ export async function collectTxs(mgr: EntityManager, txHashes: string[], block: 
   await Bluebird.mapSeries(chunk(accountTxs, 5000), (chunk) => mgr.save(chunk))
 
   logger.info(`collectTxs: ${txEntities.length}, accountTxs: ${accountTxs.length}`)
-  return txEntities
 }

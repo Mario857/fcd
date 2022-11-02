@@ -188,19 +188,6 @@ export async function getTotalSupply(strHeight?: string): Promise<Coin[]> {
   return (await get('/cosmos/bank/v1beta1/supply', { height: calculateHeightParam(strHeight) })).supply || []
 }
 
-///////////////////////////////////////////////
-// Staking
-///////////////////////////////////////////////
-export async function getDelegations(delegator: string): Promise<LcdStakingDelegation[]> {
-  const res = await get(`/cosmos/staking/v1beta1/delegations/${delegator}`)
-  return res?.delegation_responses || []
-}
-
-export async function getUnbondingDelegations(address: string): Promise<LcdStakingUnbonding[]> {
-  const res = await get(`/cosmos/staking/v1beta1/delegators/${address}/unbonding_delegations`)
-  return res?.unbonding_responses || []
-}
-
 export async function getValidators(status?: LcdValidatorStatus, strHeight?: string): Promise<LcdValidator[]> {
   const height = calculateHeightParam(strHeight)
 
@@ -222,10 +209,6 @@ export async function getValidators(status?: LcdValidatorStatus, strHeight?: str
 export async function getValidator(operatorAddr: string): Promise<LcdValidator | undefined> {
   const res = await get(`/cosmos/staking/v1beta1/validators/${operatorAddr}`)
   return res?.validator
-}
-
-export async function getStakingPool(strHeight?: string): Promise<LcdStakingPool> {
-  return (await get(`/cosmos/staking/v1beta1/pool`, { height: calculateHeightParam(strHeight) })).pool
 }
 
 ///////////////////////////////////////////////

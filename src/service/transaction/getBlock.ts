@@ -33,7 +33,7 @@ export async function getBlock(height: number): Promise<GetBlockResponse> {
   const val = await getValidator(block.proposer)
 
   return {
-    ...omit(block, ['id', 'reward', 'txs', 'proposer']),
+    ...omit(block, ['id', 'txs', 'proposer']),
     proposer: val && {
       moniker: val.description.moniker || '',
       identity: val.description.identity || '',

@@ -15,50 +15,12 @@ export * from './TxEntity'
 import AccountTxEntity from './AccountTxEntity'
 export * from './AccountTxEntity'
 
-import NetworkEntity from './NetworkEntity'
-export * from './NetworkEntity'
-
-import RewardEntity from './RewardEntity'
-export * from './RewardEntity'
-
-import GeneralInfoEntity from './GeneralInfoEntity'
-export * from './GeneralInfoEntity'
-
-import BlockRewardEntity from './BlockRewardEntity'
-export * from './BlockRewardEntity'
-
-import DashboardEntity from './DashboardEntity'
-export * from './DashboardEntity'
-
-import PriceEntity from './PriceEntity'
-export * from './PriceEntity'
-
-export {
-  BlockEntity,
-  TxEntity,
-  PriceEntity,
-  AccountTxEntity,
-  NetworkEntity,
-  RewardEntity,
-  GeneralInfoEntity,
-  BlockRewardEntity,
-  DashboardEntity
-}
+export { BlockEntity, TxEntity, AccountTxEntity }
 
 export const staticOptions = {
   supportBigNumbers: true,
   bigNumberStrings: true,
-  entities: [
-    BlockEntity,
-    TxEntity,
-    AccountTxEntity,
-    NetworkEntity,
-    RewardEntity,
-    GeneralInfoEntity,
-    BlockRewardEntity,
-    DashboardEntity,
-    PriceEntity
-  ]
+  entities: [BlockEntity, TxEntity, AccountTxEntity]
 }
 
 function initConnection(options: ConnectionOptions): Promise<Connection> {

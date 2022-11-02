@@ -1,13 +1,11 @@
-import { KoaController, Validate, Get, Controller, Validator, Post } from 'koa-joi-controllers'
+import { KoaController, Validate, Get, Controller, Validator } from 'koa-joi-controllers'
 import config from 'config'
 import { success } from 'lib/response'
 import { ErrorCodes } from 'lib/error'
 import { TERRA_ACCOUNT_REGEX, CHAIN_ID_REGEX } from 'lib/constant'
-import Mempool from 'lib/mempool'
 import { getBlock, getTx, getTxList } from 'service/transaction'
 
 const Joi = Validator.Joi
-
 @Controller('')
 export default class TransactionController extends KoaController {
   @Get('/blocks/:height')
@@ -169,114 +167,5 @@ export default class TransactionController extends KoaController {
   })
   async getTxList(ctx): Promise<void> {
     success(ctx, await getTxList(ctx.query))
-  }
-
-  /**
-   * @api {get} /txs/gas_prices Get gas prices
-   * @apiName getGasPrices
-   * @apiGroup Transactions
-   *
-   * @apiSuccess {string} uluna gas price in uluna
-   */
-  @Get('/txs/gas_prices')
-  async getGasPrices(ctx): Promise<void> {
-    success(ctx, config.MIN_GAS_PRICES)
-  }
-
-  /**
-   * @api {get} /mempool/:txhash Get transaction in mempool
-   * @apiName getMempoolByHash
-   * @apiGroup Transactions
-   *
-   * @apiSuccess {String} timestamp Last seen
-   * @apiSuccess {String} txhash
-   * @apiSuccess {Object} tx
-   * @apiSuccess {string} tx.type
-   * @apiSuccess {Object} tx.value
-   * @apiSuccess {Object} tx.value.fee
-   * @apiSuccess {Object[]} tx.value.fee.amount
-   * @apiSuccess {string} tx.value.fee.amount.denom
-   * @apiSuccess {string} tx.value.fee.amount.amount
-   * @apiSuccess {string} tx.value.fee.gas
-   * @apiSuccess {string} tx.value.memo
-   * @apiSuccess {Object[]} tx.value.msg
-   * @apiSuccess {string} tx.value.msg.type
-   * @apiSuccess {Object} tx.value.msg.value
-   * @apiSuccess {Object[]} tx.value.msg.value.amount
-   * @apiSuccess {string} tx.value.msg.value.amount.denom
-   * @apiSuccess {string} tx.value.msg.value.amount.amount
-   * @apiSuccess {Object[]} tx.value.signatures
-   * @apiSuccess {Object[]} tx.value.signatures.pubKey
-   * @apiSuccess {string} tx.value.signatures.pubKey.type
-   * @apiSuccess {string} tx.value.signatures.pubKey.value
-   * @apiSuccess {string} tx.value.signatures.signature
-   */
-  @Get('/mempool/:txhash')
-  @Validate({
-    params: {
-      txhash: Joi.string().required().alphanum().description('Tx hash')
-    },
-    failure: ErrorCodes.INVALID_REQUEST_ERROR
-  })
-  getMempoolByHash(ctx) {
-    success(ctx, Mempool.getTransactionByHash(ctx.params.txhash))
-  }
-
-  /**
-   * @api {get} /mempool Get transactions in mempool
-   * @apiName getMempool
-   * @apiGroup Transactions
-   *
-   * @apiParam {string} [account] Account address
-   *
-   * @apiSuccess {Object[]} txs
-   * @apiSuccess {String} txs.timestamp Last seen
-   * @apiSuccess {String} txs.txhash
-   * @apiSuccess {Object} txs.tx
-   * @apiSuccess {string} txs.tx.type
-   * @apiSuccess {Object} txs.tx.value
-   * @apiSuccess {Object} txs.tx.value.fee
-   * @apiSuccess {string} txs.tx.value.fee.gas
-   * @apiSuccess {Object[]} txs.tx.value.fee.amount
-   * @apiSuccess {string} txs.tx.value.fee.amount.denom
-   * @apiSuccess {string} txs.tx.value.fee.amount.amount
-   * @apiSuccess {string} txs.tx.value.memo
-   * @apiSuccess {Object[]} txs.tx.value.msg
-   * @apiSuccess {string} txs.tx.value.msg.type
-   * @apiSuccess {Object} txs.tx.value.msg.value
-   * @apiSuccess {Object[]} txs.tx.value.msg.value.inputs
-   * @apiSuccess {string} txs.tx.value.msg.value.inputs.address
-   * @apiSuccess {Object[]} txs.tx.value.msg.value.inputs.coins
-   * @apiSuccess {string} txs.tx.value.msg.value.inputs.coins.deonm
-   * @apiSuccess {string} txs.tx.value.msg.value.inputs.coins.amount
-   *
-   * @apiSuccess {Object[]} txs.tx.value.msg.value.outputs
-   * @apiSuccess {string} txs.tx.value.msg.value.outputs.address
-   * @apiSuccess {Object[]} txs.tx.value.msg.value.outputs.coins
-   * @apiSuccess {string} txs.tx.value.msg.value.outputs.coins.deonm
-   * @apiSuccess {string} txs.tx.value.msg.value.outputs.coins.amount
-   *
-   * @apiSuccess {Object[]} txs.tx.value.signatures
-   * @apiSuccess {string} txs.tx.value.signatures.signature
-   * @apiSuccess {Object} txs.tx.value.signatures.pub_key
-   * @apiSuccess {string} txs.tx.value.signatures.pub_key.type
-   * @apiSuccess {string} txs.tx.value.signatures.pub_key.value
-   */
-  @Get('/mempool')
-  @Validate({
-    query: {
-      account: Joi.string().allow('').regex(TERRA_ACCOUNT_REGEX).description('User address')
-    }
-  })
-  async getMempool(ctx) {
-    if (ctx.query.account) {
-      success(ctx, {
-        txs: Mempool.getTransactionsByAddress(ctx.query.account)
-      })
-    } else {
-      success(ctx, {
-        txs: Mempool.getTransactions()
-      })
-    }
   }
 }

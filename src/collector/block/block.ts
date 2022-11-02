@@ -1,22 +1,15 @@
 import * as sentry from '@sentry/node'
-import { getMinutes } from 'date-fns'
 import { getRepository, getManager, DeepPartial, EntityManager } from 'typeorm'
 import * as Bluebird from 'bluebird'
 import { bech32 } from 'bech32'
 
 import config from 'config'
-import { BlockEntity, BlockRewardEntity } from 'orm'
-import { splitDenomAndAmount, convertAddressToHex } from 'lib/common'
-import { plus } from 'lib/math'
+import { BlockEntity } from 'orm'
 import { collectorLogger as logger } from 'lib/logger'
 import * as lcd from 'lib/lcd'
-import * as rpc from 'lib/rpc'
 import { getTxHashesFromBlock } from 'lib/tx'
 
 import { collectTxs } from './tx'
-import { collectReward } from './reward'
-import { collectNetwork } from './network'
-import { collectGeneral } from './general'
 
 const validatorCache = new Map()
 
@@ -62,107 +55,33 @@ async function getLatestIndexedBlock(): Promise<BlockEntity | undefined> {
   return latestBlock[0]
 }
 
-async function generateBlockEntity(
-  lcdBlock: LcdBlock,
-  blockReward: BlockRewardEntity
-): Promise<DeepPartial<BlockEntity>> {
+async function generateBlockEntity(lcdBlock: LcdBlock): Promise<DeepPartial<BlockEntity>> {
   const { chain_id: chainId, height, time: timestamp, proposer_address } = lcdBlock.block.header
 
   const blockEntity: DeepPartial<BlockEntity> = {
     chainId,
     height: +height,
     timestamp: new Date(timestamp),
-    reward: blockReward,
     proposer: await getValidatorOperatorAddressByConsensusAddress(proposer_address, height)
   }
 
   return blockEntity
 }
 
-const totalRewardReducer = (acc: DenomMap, item: Coin & { validator: string }): DenomMap => {
-  acc[item.denom] = plus(acc[item.denom], item.amount)
-  return acc
-}
-
-const validatorRewardReducer = (acc: DenomMapByValidator, item: Coin & { validator: string }): DenomMapByValidator => {
-  if (!acc[item.validator]) {
-    acc[item.validator] = {}
-  }
-
-  acc[item.validator][item.denom] = plus(acc[item.validator][item.denom], item.amount)
-  return acc
-}
-
-export async function getBlockReward(height: string): Promise<DeepPartial<BlockRewardEntity>> {
-  const decodedRewardsAndCommission = await rpc.getRewards(height)
-
-  const totalReward = {}
-  const totalCommission = {}
-  const rewardPerVal = {}
-  const commissionPerVal = {}
-
-  decodedRewardsAndCommission &&
-    decodedRewardsAndCommission.forEach((item) => {
-      if (!item.amount) {
-        return
-      }
-
-      if (item.type === 'rewards') {
-        const rewards = item.amount
-          .split(',')
-          .map((amount) => ({ ...splitDenomAndAmount(amount), validator: item.validator }))
-
-        rewards.reduce(totalRewardReducer, totalReward)
-        rewards.reduce(validatorRewardReducer, rewardPerVal)
-      } else if (item.type === 'commission') {
-        const commissions = item.amount
-          .split(',')
-          .map((amount) => ({ ...splitDenomAndAmount(amount), validator: item.validator }))
-
-        commissions.reduce(totalRewardReducer, totalCommission)
-        commissions.reduce(validatorRewardReducer, commissionPerVal)
-      }
-    })
-
-  const blockReward: DeepPartial<BlockRewardEntity> = {
-    reward: totalReward,
-    commission: totalCommission,
-    rewardPerVal,
-    commissionPerVal
-  }
-  return blockReward
-}
-
-export async function saveBlockInformation(
-  lcdBlock: LcdBlock,
-  latestIndexedBlock: BlockEntity | undefined
-): Promise<BlockEntity | undefined> {
+export async function saveBlockInformation(lcdBlock: LcdBlock): Promise<BlockEntity | undefined> {
   const height: string = lcdBlock.block.header.height
   logger.info(`collectBlock: begin transaction for block ${height}`)
 
   const result: BlockEntity | undefined = await getManager()
     .transaction(async (mgr: EntityManager) => {
-      // Save block rewards
-      const newBlockReward = await mgr.getRepository(BlockRewardEntity).save(await getBlockReward(height))
       // Save block entity
-      const newBlockEntity = await mgr
-        .getRepository(BlockEntity)
-        .save(await generateBlockEntity(lcdBlock, newBlockReward))
+      const newBlockEntity = await mgr.getRepository(BlockEntity).save(await generateBlockEntity(lcdBlock))
       // get block tx hashes
       const txHashes = getTxHashesFromBlock(lcdBlock)
 
       if (txHashes.length) {
         // save transactions
         await collectTxs(mgr, txHashes, newBlockEntity)
-      }
-
-      // new block timestamp
-      if (latestIndexedBlock && getMinutes(latestIndexedBlock.timestamp) !== getMinutes(newBlockEntity.timestamp)) {
-        const newBlockTimeStamp = new Date(newBlockEntity.timestamp).getTime()
-
-        await collectReward(mgr, newBlockTimeStamp, height)
-        await collectNetwork(mgr, newBlockTimeStamp, height)
-        await collectGeneral(mgr, newBlockTimeStamp, height)
       }
 
       return newBlockEntity
@@ -212,7 +131,7 @@ export async function collectBlock(): Promise<void> {
       break
     }
 
-    latestIndexedBlock = await saveBlockInformation(lcdBlock, latestIndexedBlock)
+    latestIndexedBlock = await saveBlockInformation(lcdBlock)
 
     // Exit the loop after transaction error whether there's more blocks or not
     if (!latestIndexedBlock) {

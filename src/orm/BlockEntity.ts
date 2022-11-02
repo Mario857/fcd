@@ -1,7 +1,6 @@
-import { Column, Entity, PrimaryGeneratedColumn, Index, OneToMany, OneToOne } from 'typeorm'
+import { Column, Entity, PrimaryGeneratedColumn, Index, OneToMany } from 'typeorm'
 
 import TxEntity from './TxEntity'
-import BlockRewardEntity from './BlockRewardEntity'
 
 @Entity('block')
 @Index('index_with_chainid_and_height', ['chainId', 'height'], { unique: true })
@@ -28,7 +27,4 @@ export default class BlockEntity {
     cascade: true
   })
   txs: TxEntity[]
-
-  @OneToOne(() => BlockRewardEntity, (reward) => reward.block, { cascade: true, eager: true })
-  reward: BlockRewardEntity
 }

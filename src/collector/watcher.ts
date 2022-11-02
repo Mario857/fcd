@@ -1,23 +1,11 @@
 import * as sentry from '@sentry/node'
 import { collectorLogger as logger } from 'lib/logger'
-import RPCWatcher, { RpcResponse } from 'lib/RPCWatcher'
+import RPCWatcher from 'lib/RPCWatcher'
 import config from 'config'
 import { collectBlock } from './block'
 
 const SOCKET_URL = `${config.RPC_URI.replace('http', 'ws')}/websocket?key=cf65fc4a413a47639f623f80e67adb1b`
 const NEW_BLOCK_Q = `tm.event='NewBlock'`
-
-async function processNewBlock(data: RpcResponse) {
-  const marshalTxs = data.result.data?.value.block?.data.txs as string[]
-  // const height = data.result.data?.value.block?.header.height as string
-
-  if (marshalTxs) {
-    // try {
-    // } catch (err) {
-    //   sentry.captureException(err)
-    // }
-  }
-}
 
 let blockUpdated = true
 
@@ -40,10 +28,9 @@ export async function start() {
     logger
   })
 
-  watcher.registerSubscriber(NEW_BLOCK_Q, async (resp: RpcResponse) => {
+  watcher.registerSubscriber(NEW_BLOCK_Q, async () => {
     eventCounter += 1
     blockUpdated = true
-    await processNewBlock(resp).catch(sentry.captureException)
   })
 
   await watcher.start()
