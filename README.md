@@ -1,4 +1,4 @@
-# Terra FCD
+# Terra WASM FCD
 
 ![Banner](banner.png)
 
@@ -6,10 +6,6 @@
 
 - ### Collector(Indexer)
   - Takes block and tx from [LCD](https://docs.terra.money/How-to/Start-LCD.html#start-the-light-client-daemon-lcd) and stores into the database in a usable form
-  - Stores issuance, network and staking information to database every minute
-  - Collect & cache validator info and store in db
-  - Calculate validator daily return
-  - Collect & cache proposal info
 - ### Rest API server
   - Serves data via RESTFul API
 
