@@ -5,7 +5,7 @@
 ## Modules
 
 - ### Collector(Indexer)
-  - Takes block and tx from [LCD](https://docs.terra.money/How-to/Start-LCD.html#start-the-light-client-daemon-lcd) and stores into the database in a usable form
+  - Takes block and wasm tx from [LCD](https://docs.terra.money/How-to/Start-LCD.html#start-the-light-client-daemon-lcd) and stores into the database in a usable form
 - ### Rest API server
   - Serves data via RESTFul API
 
@@ -19,7 +19,7 @@
 ### 1. Clone
 
 ```bash
-$ git clone https://github.com/terra-money/fcd.git
+$ git clone https://github.com/Mario857/fcd-wasm/fcd.git
 ```
 
 ### 2. Install packages
